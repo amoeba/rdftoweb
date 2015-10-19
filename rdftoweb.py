@@ -1,8 +1,13 @@
+""" rdftoweb.py
+    author: Bryce Mecum (mecum@nceas.ucsb.edu)
+
+    Cnverts an RDF graph (in Turtle format) into a set of static HTML pags.
+"""
+
 import os
 import RDF
 from urlparse import urlparse
 import urllib
-import time
 
 
 def getConcept(uri):
@@ -23,6 +28,7 @@ def getConcept(uri):
 def isInternal(pages, uri):
     """
     Checks if a URI is internal or external.
+
     A URI is internal if that URI is the subject
     of any triples in the graph.
     Otherwise it is external.
@@ -53,6 +59,10 @@ def getLinkFor(uri):
 
 
 def getFilename(uri):
+    """
+    Get the name on disk for a URI.
+    """
+
     filename = None
 
     if uri.startswith("https://cn.dataone.org/cn/v1/resolve/"):
@@ -171,8 +181,8 @@ def createPages(base_dir, pages):
 
         # Create pages
         for page in pages[concept]:
-            fragment = fragmentHTML(pages, concept, page)
-            page_html = pageHTML(fragment)
+            content = contentHTML(pages, concept, page)
+            page_html = pageHTML(content)
 
             concept = getConcept(page)
             filename = getFilename(page)
@@ -181,9 +191,9 @@ def createPages(base_dir, pages):
                 f.write(page_html)
 
 
-def fragmentHTML(pages, concept, page):
+def contentHTML(pages, concept, page):
     """
-    Makes the fragment (content) HTML.
+    Makes the content HTML (what changes across pages) for a page..
     """
 
     title_html = "<h2><a href='%s'>%s</a></h2>" % (getLinkFor(page), urllib.unquote(page))
@@ -198,7 +208,6 @@ def fragmentHTML(pages, concept, page):
         is_internal = isInternal(pages, object_string)
 
         if is_internal:
-            print "  %s should be internally linked." % object_string
             thing_filepath = getFilename(object_string)
             object_ele = "<a class='internal' href='%s'>%s</a>" % (getLinkFor(object_string), object_string)
 
@@ -239,23 +248,13 @@ def main():
                 pages[concept][subject_uri_string] = []
         else:
             # raise Exception("All subjects should be resources.")
-            print " .... skipping statement %s" % statement
+            print "Not implemented: skipping statement %s" % statement
             continue
 
 
         predicate_string = str(statement.predicate)
         predicate_string = predicate_string.replace(base_vocab, 'glview:')
         pages[concept][subject_uri_string].append({'p': predicate_string, 'o': str(statement.object) })
-
-    # import pprint
-    # print pprint.pprint(pages)
-
-    print "dumping"
-    for concept in pages:
-        for key in pages[concept]:
-            print key
-
-    print "end dump"
 
     createPages(base_dir, pages)
 
