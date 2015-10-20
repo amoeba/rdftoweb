@@ -84,56 +84,67 @@ def pageHTML(content=''):
     Creates HTML for a web page and inserts the HTML from content into it.
     """
 
-    css = """
-    body {
-        font-family: Sans-serif;
-    }
+    css = """body {
+                font-family: Sans-serif;
+            }
 
-    table {
-        border-collapse: true;
-    }
+            table {
+                border-collapse: true;
+            }
 
-    table td {
-        padding: 0.25em;
-        border: 1px solid black;
-    }
+            table td {
+                padding: 0.25em;
+                border: 1px solid black;
+            }
 
-    a {
-        color: blue;
-        text-decoration: none;
-    }
+            a {
+                color: blue;
+                text-decoration: none;
+            }
 
-    a:visited {
-        color: blue;
-    }
+            a:visited {
+                color: blue;
+            }
 
-    a.internal {
-        color: green;
-    }
+            a.internal {
+                color: green;
+            }
 
-    a.internal::before {
-        font-family: monospace;
-        content: '[INT]'
-    }
+            a.internal::before {
+                font-family: monospace;
+                content: '[INT]'
+            }
 
-    a.external {
-        color: red;
-    }
+            a.external {
+                color: red;
+            }
 
-    a.external::before {
-        font-family: monospace;
-        content: '[EXT]'
-    }
-    """
+            a.external::before {
+                font-family: monospace;
+                content: '[EXT]'
+            }"""
 
-    html_string = "<html><head><style type='text/css'>%s</style><body><h1>RDF to Web Output</h1><h2>Concepts</h2><ul class='nav'>" % css
+    html_string = """<html>
+    <head>
+        <style type='text/css'>
+            %s
+        </style>
+    </head>
+    <body>
+        <h1>RDF to Web Output</h1>
+        <h2>Concepts</h2>
+        <ul class='nav'>""" % css
 
     for concept in ['person', 'organization', 'dataset']:
-        html_string += "<li><a href='/%s'>%s</a></li>" % (concept, concept.capitalize())
+        html_string += """
+            <li><a href='/%s'>%s</a></li>""" % (concept, concept.capitalize())
 
-    html_string += "</ul>"
+    html_string += """
+        </ul>"""
     html_string += content
-    html_string += "</body></html>"
+    html_string += """
+    </body>
+</html>"""
 
     return html_string
 
@@ -161,15 +172,21 @@ def createConceptIndex(base_dir, pages, concept):
         if page not in unique_uris:
             unique_uris.append(page)
 
-    html_string = "<h2>%s</h2><ul>" % concept.capitalize()
+    html_string = """
+        <h2>%s</h2>""" % concept.capitalize()
+
+    html_string += """
+        <ul>"""
 
     if not os.path.exists(base_dir + '/' + concept):
         os.mkdir(base_dir + '/' + concept)
 
     for uri in unique_uris:
-        html_string += "<li><a href='%s'>%s</a></li>" % (getLinkFor(uri), uri)
+        html_string += """
+            <li><a href='%s'>%s</a></li>""" % (getLinkFor(uri), uri)
 
-    html_string += "</ul>"
+    html_string += """
+        </ul>"""
 
     page_html = pageHTML(html_string)
 
@@ -209,8 +226,18 @@ def contentHTML(pages, concept, page):
     Makes the content HTML (what changes across pages) for a page..
     """
 
-    title_html = "<h2><a href='%s'>%s</a></h2>" % (getLinkFor(page), urllib.unquote(page))
-    html_string = "%s<table><thead><tr><th>Predicate</th><th>Object</th></tr></thead><tbody>" % title_html
+    title_html = """<h2><a href='%s'>%s</a></h2>
+    """ % (getLinkFor(page), urllib.unquote(page))
+
+    html_string = """%s
+        <table>
+            <thead>
+                <tr>
+                    <th>Predicate</th>
+                    <th>Object</th>
+                </tr>
+            </thead>
+            <tbody>""" % title_html
 
     for thing in pages[concept][page]:
         predicate_ele = thing['p']
@@ -231,9 +258,15 @@ def contentHTML(pages, concept, page):
             else:
                 object_ele = object_string
 
-        html_string += "<tr><td>%s</td><td>%s</td></tr>" % (predicate_ele, object_ele)
+        html_string += """
+                <tr>
+                    <td>%s</td>
+                    <td>%s</td>
+                </tr>""" % (predicate_ele, object_ele)
 
-    html_string += "</tbody></table>"
+    html_string += """
+            </tbody>
+        </table>"""
 
     return html_string
 
