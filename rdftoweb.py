@@ -79,7 +79,7 @@ def getFilename(uri):
     return filename
 
 
-def pageHTML(content):
+def pageHTML(content=''):
     """
     Creates HTML for a web page and inserts the HTML from content into it.
     """
@@ -138,7 +138,19 @@ def pageHTML(content):
     return html_string
 
 
-def createIndex(base_dir, pages, concept):
+def createIndex(base_dir, pages):
+    """
+    Create an index HTML for all concepts. The index.html file will located in
+    the base directory.
+    """
+
+    page_html = pageHTML()
+
+    with open("%s/index.html" % base_dir, 'wb') as f:
+        f.write(page_html)
+
+
+def createConceptIndex(base_dir, pages, concept):
     """
     Create an index HTML page for a concept.
     """
@@ -176,8 +188,9 @@ def createPages(base_dir, pages):
         if not os.path.exists(concept_folder_path):
             os.mkdir(concept_folder_path)
 
-        # Create index
-        createIndex(base_dir, pages, concept)
+        # Create indicies
+        createIndex(base_dir, pages)
+        createConceptIndex(base_dir, pages, concept)
 
         # Create pages
         for page in pages[concept]:
