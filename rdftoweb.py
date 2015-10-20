@@ -302,6 +302,10 @@ def main():
         predicate_string = predicate_string.replace(base_vocab, 'glview:')
         pages[concept][subject_uri_string].append({'p': predicate_string, 'o': str(statement.object) })
 
+    # Create base dir
+    if not os.path.exists(base_dir):
+        os.mkdir(base_dir)
+        
     createPages(base_dir, pages)
 
 
