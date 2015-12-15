@@ -92,12 +92,16 @@ def pageHTML(content='', concepts=None):
     <body>
         <h1>RDF to Web Output</h1>
 
-    for concept in ['person', 'organization', 'dataset']:
-        html_string += """
-            <li><a href='/%s'>%s</a></li>""" % (concept, concept.capitalize())
+    if concepts is not None:
+        html_string += """<h2>Concepts</h2>
+            <ul class='nav'>"""
 
-    html_string += """
-        </ul>"""
+        for concept in concepts:
+            html_string += """
+                <li><a href='/%s'>%s</a></li>""" % (concept, concept.capitalize())
+
+        html_string += """
+            </ul>"""
     html_string += content
     html_string += """
     </body>
@@ -145,7 +149,7 @@ def createConceptIndex(base_dir, pages, concept):
     html_string += """
         </ul>"""
 
-    page_html = pageHTML(html_string)
+    page_html = pageHTML(html_string, concepts=pages.keys())
 
     with open("%s/%s/index.html" % (base_dir, concept), "wb") as f:
         f.write(page_html)
@@ -169,7 +173,7 @@ def createPages(base_dir, pages):
         # Create pages
         for page in pages[concept]:
             content = contentHTML(pages, concept, page)
-            page_html = pageHTML(content)
+            page_html = pageHTML(content, concepts=pages.keys())
 
             concept = getConcept(page)
             filename = getFilename(page)
