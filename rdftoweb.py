@@ -15,11 +15,11 @@ def getConcept(uri):
     Return the concept a URI is for, based upon string matching.
     """
 
-    if uri.startswith("https://cn.dataone.org/cn/v1/resolve/"):
+    if uri.startswith("http://lod.dataone.org/dataset"):
         return 'dataset'
-    elif uri.startswith("https://dataone.org/person/"):
+    elif uri.startswith("http://lod.dataone.org/person"):
         return 'person'
-    elif uri.startswith("https://dataone.org/organization"):
+    elif uri.startswith("http://lod.dataone.org/organization"):
         return 'organization'
     else:
         return None
