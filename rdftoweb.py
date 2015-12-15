@@ -10,6 +10,8 @@ import shutil # for copying the styles.css file
 from urlparse import urlparse
 import urllib
 
+# Global variable to hold namespaces
+NS = {}
 
 def getConcept(uri):
     """
@@ -188,7 +190,7 @@ def contentHTML(pages, concept, page):
     """
 
     title_html = """<h2><a href='%s'>%s</a></h2>
-    """ % (getLinkFor(page), urllib.unquote(page))
+    """ % (getLinkFor(page), substitutePrefix(urllib.unquote(page)))
 
     html_string = """%s
         <table>
@@ -325,7 +327,17 @@ def main():
 
     parser = RDF.TurtleParser()
     model = RDF.Model()
-    parser.parse_into_model(model, "file:./dataset.ttl")
+
+    # Figure out filename
+    if len(sys.argv) != 2:
+        print "You must specify a filename and nothing else to rdftoweb.py."
+        print "  e.g. python rdftwoweb.py mydataset.ttl"
+
+    parser.parse_into_model(model, "file:" + sys.argv[1])
+    namespaces = parser.namespaces_seen()
+
+    for namespace in namespaces:
+        NS[namespace] = str(namespaces[namespace])
 
     for statement in model:
         page = None
