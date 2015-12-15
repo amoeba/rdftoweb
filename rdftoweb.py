@@ -4,6 +4,7 @@
     Cnverts an RDF graph (in Turtle format) into a set of static HTML pags.
 """
 
+import sys
 import os
 import RDF
 import shutil # for copying the styles.css file
@@ -93,6 +94,7 @@ def pageHTML(content='', concepts=None):
     </head>
     <body>
         <h1>RDF to Web Output</h1>
+    """
 
     if concepts is not None:
         html_string += """<h2>Concepts</h2>
@@ -118,7 +120,7 @@ def createIndex(base_dir, pages):
     the base directory.
     """
 
-    page_html = pageHTML()
+    page_html = pageHTML(concepts=pages.keys())
 
     with open("%s/index.html" % base_dir, 'wb') as f:
         f.write(page_html)
@@ -180,7 +182,7 @@ def createPages(base_dir, pages):
             concept = getConcept(page)
             filename = getFilename(page)
 
-            with open(base_dir + '/' + concept + '/' + filename + ".html", "wb") as f:
+            with open(concept_folder_path + '/' + filename + ".html", "wb") as f:
                 f.write(page_html)
 
 
@@ -321,9 +323,9 @@ def substitutePrefix(term):
 
 
 def main():
-    base_vocab = "http://schema.geolink.org/dev/view/"
-    pages = {}
+    base_vocab = "http://lod.dataone.org/"
     base_dir = "output"
+    pages = { }
 
     parser = RDF.TurtleParser()
     model = RDF.Model()
@@ -352,7 +354,7 @@ def main():
             pages[concept][subject] = []
 
         predicate_string = str(statement.predicate)
-        predicate_string = predicate_string.replace(base_vocab, 'glview:')
+        predicate_string = predicate_string.replace(base_vocab, 'glbase:')
         pages[concept][subject].append({'p': predicate_string, 'o': str(statement.object) })
 
     # Create base dir
