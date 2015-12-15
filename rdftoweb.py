@@ -23,7 +23,7 @@ def getConcept(uri):
     elif uri.startswith("http://lod.dataone.org/organization"):
         return 'organization'
     else:
-        return None
+        return 'blank'
 
 
 def isInternal(pages, uri):
@@ -80,7 +80,7 @@ def getFilename(uri):
     return filename
 
 
-def pageHTML(content=''):
+def pageHTML(content='', concepts=None):
     """
     Creates HTML for a web page and inserts the HTML from content into it.
     """
@@ -196,36 +196,122 @@ def contentHTML(pages, concept, page):
             </thead>
             <tbody>""" % title_html
 
-    for thing in pages[concept][page]:
-        predicate_ele = thing['p']
+    for statement in pages[concept][page]:
+        # Do something different depending on what the object is
+        #   If blank: Inline the node
+        #   If URI:
+        #       - If it links to an internal resource, show that
+        #       - If it links to an exteranl resource, show that
+        #   If literal: Just show it
 
-        # Process object (link internal or not)
-        object_string = urllib.unquote(thing['o'])
+        object_string = statement['o']
 
-        is_internal = isInternal(pages, object_string)
+        # Check for blank first
+        if 'blank' in pages and object_string in pages['blank']:
+            object_content = blankNodeHTML(object_string, pages)
+        # Internal
+        elif isInternal(pages, object_string):
+            object_content = "<a class='internal' href='%s'>%s</a>" % (getLinkFor(object_string), substitutePrefix(object_string))
 
-        if is_internal:
-            thing_filepath = getFilename(object_string)
-            object_ele = "<a class='internal' href='%s'>%s</a>" % (getLinkFor(object_string), object_string)
-
+        # External or literal
         else:
             if object_string.startswith("http"):
-                thing_uri = urllib.unquote(object_string)
-                object_ele = "<a class='external' href='%s'>%s</a>" % (thing_uri, thing_uri)
+                object_uri = urllib.unquote(object_string)
+                object_content = "<a class='external' href='%s'>%s</a>" % (object_uri, substitutePrefix(object_uri))
             else:
-                object_ele = object_string
+                object_content = object_string
+
+        predicate_ele = substitutePrefix(statement['p'])
 
         html_string += """
                 <tr>
                     <td>%s</td>
                     <td>%s</td>
-                </tr>""" % (predicate_ele, object_ele)
+                </tr>""" % (predicate_ele, object_content)
 
     html_string += """
             </tbody>
         </table>"""
 
     return html_string
+
+
+def blankNodeHTML(blank_node, pages):
+    """Generates an HTML table for a blank node for inlining inside a result
+    table for another resource."""
+
+    if 'blank' not in pages:
+        raise Exception("blankNodeHTML was called but no blank nodes were found.")
+
+    if blank_node not in pages['blank']:
+        raise Exception("blankNodeHTML was called for a blank node that doesn't exist.")
+
+    blank_node_content = pages['blank'][blank_node]
+
+    if len(blank_node_content) <= 0:
+        raise Exception("Blank node was found but had on statements associated with it.")
+
+    html_string = """<table>
+            <thead>
+                <tr>
+                    <th>Predicate</th>
+                    <th>Object</th>
+                </tr>
+            </thead>
+            <tbody>"""
+
+    for statement in blank_node_content:
+        predicate_content = statement['p']
+
+        # Prefix the predicate if we can
+        predicate_content = substitutePrefix(predicate_content)
+
+        object_string = statement['o']
+
+        # Blank
+        if object_string in pages['blank']:
+            object_content = blankNodeHTML(object_string, pages)
+
+        # Internal
+        elif isInternal(pages, object_string):
+            object_content = "<a class='internal' href='%s'>%s</a>" % (getLinkFor(object_string), substitutePrefix(object_string))
+
+        # External or literal
+        else:
+            if object_string.startswith("http"):
+                object_uri = urllib.unquote(object_string)
+                object_content = "<a class='external' href='%s'>%s</a>" % (object_uri, substitutePrefix(object_uri))
+            else:
+                object_content = object_string
+
+
+        html_string += """<tr>
+            <td>
+                %s
+            </td>
+            <td>
+                %s
+            </td>
+        </tr>""" % (predicate_content, object_content)
+
+    html_string += """</tbody>
+        </table>"""
+
+    return html_string
+
+
+def substitutePrefix(term):
+    """Attempt to prefix the term with its namespace string instead of the
+    fully-specified URI.
+
+    Returns either the prefix'd term string (foo:Bar) or the original string if
+    the term did not start with a URI in an known namespace."""
+
+    for prefix in NS:
+        if term.startswith(NS[prefix]):
+            term = term.replace(NS[prefix], prefix + ":")
+
+    return term
 
 
 def main():
@@ -240,29 +326,23 @@ def main():
     for statement in model:
         page = None
 
-        if statement.subject.is_resource():
-            subject_uri_string = urllib.unquote(str(statement.subject.uri))
-            concept = getConcept(subject_uri_string)
+        subject = urllib.unquote(str(statement.subject))
+        concept = getConcept(subject)
 
-            if concept not in pages:
-                pages[concept] = {}
+        if concept not in pages:
+            pages[concept] = {}
 
-            if subject_uri_string not in pages[concept]:
-                pages[concept][subject_uri_string] = []
-        else:
-            # raise Exception("All subjects should be resources.")
-            print "Not implemented: skipping statement %s" % statement
-            continue
-
+        if subject not in pages[concept]:
+            pages[concept][subject] = []
 
         predicate_string = str(statement.predicate)
         predicate_string = predicate_string.replace(base_vocab, 'glview:')
-        pages[concept][subject_uri_string].append({'p': predicate_string, 'o': str(statement.object) })
+        pages[concept][subject].append({'p': predicate_string, 'o': str(statement.object) })
 
     # Create base dir
     if not os.path.exists(base_dir):
         os.mkdir(base_dir)
-        
+
     createPages(base_dir, pages)
 
     # Copy in the base stylehseet
