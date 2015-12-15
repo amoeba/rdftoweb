@@ -273,8 +273,8 @@ def contentHTML(pages, concept, page):
 
 def main():
     base_vocab = "http://schema.geolink.org/dev/view/"
-    base_dir = "dataset"
     pages = {}
+    base_dir = "output"
 
     parser = RDF.TurtleParser()
     model = RDF.Model()
