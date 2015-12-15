@@ -6,6 +6,7 @@
 
 import os
 import RDF
+import shutil # for copying the styles.css file
 from urlparse import urlparse
 import urllib
 
@@ -84,56 +85,12 @@ def pageHTML(content=''):
     Creates HTML for a web page and inserts the HTML from content into it.
     """
 
-    css = """body {
-                font-family: Sans-serif;
-            }
-
-            table {
-                border-collapse: true;
-            }
-
-            table td {
-                padding: 0.25em;
-                border: 1px solid black;
-            }
-
-            a {
-                color: blue;
-                text-decoration: none;
-            }
-
-            a:visited {
-                color: blue;
-            }
-
-            a.internal {
-                color: green;
-            }
-
-            a.internal::before {
-                font-family: monospace;
-                content: '[INT]'
-            }
-
-            a.external {
-                color: red;
-            }
-
-            a.external::before {
-                font-family: monospace;
-                content: '[EXT]'
-            }"""
-
     html_string = """<html>
     <head>
-        <style type='text/css'>
-            %s
-        </style>
+        <link rel="stylesheet" href="/styles.css">
     </head>
     <body>
         <h1>RDF to Web Output</h1>
-        <h2>Concepts</h2>
-        <ul class='nav'>""" % css
 
     for concept in ['person', 'organization', 'dataset']:
         html_string += """
@@ -307,6 +264,9 @@ def main():
         os.mkdir(base_dir)
         
     createPages(base_dir, pages)
+
+    # Copy in the base stylehseet
+    shutil.copyfile('styles.css', 'output/styles.css')
 
 
 if __name__ == "__main__":
