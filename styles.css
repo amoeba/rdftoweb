@@ -1,0 +1,29 @@
+body {
+  font-family: Sans-serif
+}
+
+table {
+  border-collapse: true;
+}
+
+table td {
+  padding: 0.25em;
+  border: 1px solid #fff;
+}
+
+a {
+  color: blue;
+  text-decoration: none;
+}
+
+a:visited {
+  color: blue;
+}
+
+a.internal {
+  color: green;
+}
+
+a.external {
+  color: red;
+}
