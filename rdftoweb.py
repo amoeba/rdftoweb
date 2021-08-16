@@ -8,8 +8,7 @@ import sys
 import os
 import RDF
 import shutil # for copying the styles.css file
-from urlparse import urlparse
-import urllib
+from urllib.parse import quote_plus, unquote_plus
 
 # Global variable to hold namespaces
 NS = {}
@@ -57,7 +56,7 @@ def getLinkFor(uri):
     concept = getConcept(uri)
     filename = getFilename(uri)
 
-    link = "/%s/%s.html" % (concept, urllib.quote_plus(filename))
+    link = "/%s/%s.html" % (concept, quote_plus(filename))
 
     return link
 
@@ -78,7 +77,7 @@ def getFilename(uri):
     else:
         filename = uri
 
-    filename = urllib.quote_plus(filename)
+    filename = quote_plus(filename)
 
     return filename
 
@@ -122,7 +121,7 @@ def createIndex(base_dir, pages):
 
     page_html = pageHTML(concepts=pages.keys())
 
-    with open("%s/index.html" % base_dir, 'wb') as f:
+    with open("%s/index.html" % base_dir, 'w') as f:
         f.write(page_html)
 
 
@@ -155,7 +154,7 @@ def createConceptIndex(base_dir, pages, concept):
 
     page_html = pageHTML(html_string, concepts=pages.keys())
 
-    with open("%s/%s/index.html" % (base_dir, concept), "wb") as f:
+    with open("%s/%s/index.html" % (base_dir, concept), "w") as f:
         f.write(page_html)
 
 
@@ -182,7 +181,7 @@ def createPages(base_dir, pages):
             concept = getConcept(page)
             filename = getFilename(page)
 
-            with open(concept_folder_path + '/' + filename + ".html", "wb") as f:
+            with open(concept_folder_path + '/' + filename + ".html", "w") as f:
                 f.write(page_html)
 
 
@@ -192,7 +191,7 @@ def contentHTML(pages, concept, page):
     """
 
     title_html = """<h2><a href='%s'>%s</a></h2>
-    """ % (getLinkFor(page), substitutePrefix(urllib.unquote(page)))
+    """ % (getLinkFor(page), substitutePrefix(unquote_plus(page)))
 
     html_string = """%s
         <table>
@@ -224,7 +223,7 @@ def contentHTML(pages, concept, page):
         # External or literal
         else:
             if object_string.startswith("http"):
-                object_uri = urllib.unquote(object_string)
+                object_uri = unquote_plus(object_string)
                 object_content = "<a class='external' href='%s'>%s</a>" % (object_uri, substitutePrefix(object_uri))
             else:
                 object_content = object_string
@@ -287,7 +286,7 @@ def blankNodeHTML(blank_node, pages):
         # External or literal
         else:
             if object_string.startswith("http"):
-                object_uri = urllib.unquote(object_string)
+                object_uri = unquote_plus(object_string)
                 object_content = "<a class='external' href='%s'>%s</a>" % (object_uri, substitutePrefix(object_uri))
             else:
                 object_content = object_string
@@ -332,8 +331,8 @@ def main():
 
     # Figure out filename
     if len(sys.argv) != 2:
-        print "You must specify a filename and nothing else to rdftoweb.py."
-        print "  e.g. python rdftwoweb.py mydataset.ttl"
+        print("You must specify a filename and nothing else to rdftoweb.py.")
+        print("  e.g. python rdftwoweb.py mydataset.ttl")
 
     parser.parse_into_model(model, "file:" + sys.argv[1])
     namespaces = parser.namespaces_seen()
@@ -344,7 +343,7 @@ def main():
     for statement in model:
         page = None
 
-        subject = urllib.unquote(str(statement.subject))
+        subject = unquote_plus(str(statement.subject))
         concept = getConcept(subject)
 
         if concept not in pages:
